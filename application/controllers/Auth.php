@@ -23,29 +23,36 @@ class Auth extends CI_Controller
       $data  = [];
       templateAuth($page, $data);
     } else {
-      $email      = $this->input->post('email');
-      $fullName   = $this->input->post('full-name');
-      $dataInsert = [
-        'email'     => htmlspecialchars($email),
-        'password'  => password_hash($this->input->post('password'), PASSWORD_DEFAULT),
-        'full_name' => htmlspecialchars($fullName),
-        'level'     => 'Admin',
-        'is_active' => '0',
-        'is_delete' => '0',
+      $this->_sign_up();
+    }
+  }
+
+  private function _sign_up()
+  {
+    $email      = $this->input->post('email');
+    $fullName   = $this->input->post('full-name');
+    $dataInsert = [
+      'email'     => htmlspecialchars($email),
+      'password'  => password_hash($this->input->post('password'), PASSWORD_DEFAULT),
+      'full_name' => htmlspecialchars($fullName),
+      'level'     => 'Admin',
+      'is_active' => '0',
+      'is_delete' => '0',
+    ];
+    $insert     = $this->User->insert($dataInsert);
+    if ($insert > 0) {
+      $dataEmail = [
+        'email'     => $email,
+        'full_name' => $fullName,
       ];
-      $insert     = $this->User->insert($dataInsert);
-      if ($insert > 0) {
-        $dataEmail = [
-          'email'     => $email,
-          'full_name' => $fullName,
-        ];
-        $sendEmail = $this->_sendEmailPHPMailer($dataEmail, 'sign-up');
-        if ($sendEmail) {
-          echo "Email Terkirim";
-        }
-      } else {
-        echo "Gagal insert";
+      $sendEmail = $this->_sendEmailPHPMailer($dataEmail, 'sign-up');
+      if ($sendEmail) {
+        $this->session->set_flashdata('success', 'Email Pendaftaran berhasil di kirim , silahkan cek');
+        redirect('auth/login');
       }
+    } else {
+      $this->session->set_flashdata('error', 'Data Gagal di Tambahkan');
+      redirect('auth/login');
     }
   }
 
@@ -71,9 +78,11 @@ class Auth extends CI_Controller
       ];
       $update     = $this->User->update($dataUpdate, $where);
       if ($update > 0) {
-        echo "data berhasil di update";
+        $this->session->set_flashdata('success', 'Akun Berhasil di aktivasi, Silahkan Login');
+        redirect('auth/login');
       } else {
-        echo "Server sedang sibuk, gagal update";
+        $this->session->set_flashdata('error', 'Server sedang sibuk, silahkan coba lagi');
+        redirect('auth/login');
       }
     } else {
       echo "Data tidak ada";
@@ -127,7 +136,8 @@ class Auth extends CI_Controller
       $mail->addBCC('agunghardiyanto12@gmail.com');
       $mail->isHTML(true);
       $mail->Subject  = 'Pendaftaran Akun';
-      $body           = 'Silahkan Klik Link ini untuk mengaktifkan' . base_url('aktivasi/' . $data['email']);
+      //Body bisa di load ke view 
+      $body           = 'Silahkan Klik Link ini untuk mengaktifkan <a href="' . base_url('aktivasi/' . $data['email'] . '">' . base_url('aktivasi/' . $data['email']) . '</a>');
     }
     $mail->Body   = $body;
     if (!$mail->send()) {

@@ -17,3 +17,10 @@
   </form>
   <p class="text-center"><a href="<?= base_url('daftar-akun') ?>">Create an Account</a></p>
 </div>
+
+<?php if ($this->session->flashdata('success')) : ?>
+  <div class="flashdata" data-flashdata=" <?= $this->session->flashdata('success') ?>" data-type="success"></div>
+<?php elseif ($this->session->flashdata('error')) : ?>
+  <div class="flashdata" data-flashdata=" <?= $this->session->flashdata('error') ?>" data-type="error"></div>
+<?php endif; ?>
+<?php unsetFlash(); ?>

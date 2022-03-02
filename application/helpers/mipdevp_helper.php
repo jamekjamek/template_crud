@@ -26,3 +26,13 @@ function PHPMailer()
   $mail->Password   = 'ReactNative1234%';
   return $mail;
 }
+
+function unsetFlash()
+{
+  if (isset($_SESSION['success'])) {
+    unset($_SESSION['success']);
+  }
+  if (isset($_SESSION['error'])) {
+    unset($_SESSION['error']);
+  }
+}
