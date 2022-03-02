@@ -58,5 +58,8 @@ $route['reset-password/(:any)/(:any)']    = 'auth/reset_password/$1/$2';
 //END AUTHENTICATION
 
 
+//TEMPLATE CURD
+$route['home']                      = 'crud/index';
+
 $route['404_override']              = '';
 $route['translate_uri_dashes']      = FALSE;

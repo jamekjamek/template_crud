@@ -11,9 +11,49 @@ class Auth extends CI_Controller
 
   public function login()
   {
-    $page  = 'login';
-    $data  = [];
-    templateAuth($page, $data);
+    $this->_validation('login');
+    if ($this->form_validation->run() === FALSE) {
+      $page  = 'login';
+      $data  = [];
+      templateAuth($page, $data);
+    } else {
+      $this->_login();
+    }
+  }
+
+  private function _login()
+  {
+    $email    = $this->input->post('email');
+    $password = $this->input->post('password');
+    $where    = [
+      'email' => $email
+    ];
+    $userData   = $this->User->getDataBy($where);
+    if ($userData->num_rows() > 0) {
+      $userData = $userData->row();
+      if (password_verify($password, $userData->password)) {
+        if ($userData->is_active === '1') {
+          $session  = ['userdata' => [
+            'id'          => $this->encrypt->encode($userData->id, keyencrypt()),
+            'email'       => $userData->email,
+            'full_name'   => $userData->full_name,
+            'level'       => $userData->level,
+            'updated_at'  => $userData->updated_at
+          ]];
+          $this->session->set_userdata($session);
+          redirect('home');
+        } else {
+          $this->session->set_flashdata('error', 'User sudah tidak aktif');
+          redirect('auth/login');
+        }
+      } else {
+        $this->session->set_flashdata('error', 'Password Salah');
+        redirect('auth/login');
+      }
+    } else {
+      $this->session->set_flashdata('error', 'Data user tidak ditemukan');
+      redirect('auth/login');
+    }
   }
 
   public function sign_up()
@@ -176,6 +216,28 @@ class Auth extends CI_Controller
 
   private function _validation($type = null)
   {
+    if ($type === 'login') {
+      $this->form_validation->set_rules(
+        'email',
+        'Email',
+        'trim|required|valid_email',
+        [
+          'required'    => '%s Wajib diisi',
+          'valid_email' => 'Format %s Salah',
+        ]
+      );
+
+      $this->form_validation->set_rules(
+        'password',
+        'Password',
+        'trim|required|min_length[6]|max_length[12]',
+        [
+          'required'    => '%s Wajib diisi',
+          'min_length'  => '%s Minimal 6 Karakter',
+          'max_length'  => '%s Maksimal 10 Karakter',
+        ]
+      );
+    }
     if ($type === 'sign-up') {
       $this->form_validation->set_rules(
         'email',
