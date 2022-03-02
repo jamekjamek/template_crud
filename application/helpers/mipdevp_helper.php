@@ -36,3 +36,8 @@ function unsetFlash()
     unset($_SESSION['error']);
   }
 }
+
+function keyencrypt()
+{
+  return 'xWeQSDEraxvftnabsyeirytcnsaVBFSH856SNEbsgatw791';
+}

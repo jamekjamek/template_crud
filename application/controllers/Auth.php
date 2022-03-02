@@ -65,12 +65,94 @@ class Auth extends CI_Controller
       $data  = [];
       templateAuth($page, $data);
     } else {
+      $this->_forgot_password();
     }
   }
 
-  //AKTIVASI Sederhana nanti bisa di tambahkan menggunakan token dan sebagainya
+  private function _forgot_password()
+  {
+    $email    = $this->input->post('email');
+    $rowData  = $this->User->getDataBy(['email' => $email]);
+    if ($rowData->num_rows() > 0) {
+      $rowToken = $this->User->getDataTokenBy(['email' => $email]);
+      if ($rowToken->num_rows() <= 0) {
+        $randomString = random_string('alpha', 20);
+        $dataToken  = [
+          'email'   => htmlspecialchars($email),
+          'token'   => $this->encrypt->encode($randomString, keyencrypt()),
+        ];
+        $insert       = $this->User->insert_token($dataToken);
+        if ($insert > 0) {
+          $sendEmail  = $this->_sendEmailPHPMailer($dataToken, 'forgot-password');
+          if ($sendEmail) {
+            $this->session->set_flashdata('success', 'Link Reset Password berhasil di kirim , silahkan cek');
+            redirect('auth/login');
+          }
+        } else {
+          $this->session->set_flashdata('error', 'Data Token Gagal di Tambahkan');
+          redirect('auth/login');
+        }
+      } else {
+        $dataToken  = [
+          'email'   => htmlspecialchars($email),
+          'token'   => $rowToken->row()->token
+        ];
+        $sendEmail  = $this->_sendEmailPHPMailer($dataToken, 'forgot-password');
+        if ($sendEmail) {
+          $this->session->set_flashdata('success', 'Link Reset Password berhasil di kirim , silahkan cek');
+          redirect('auth/login');
+        }
+      }
+    }
+  }
+
+  public function reset_password($email, $token)
+  {
+    $where    = [
+      'email' => $email,
+      'token' => $token
+    ];
+    $rowToken = $this->User->getDataTokenBy($where);
+
+    if ($rowToken->num_rows() > 0) {
+      $this->_validation('reset-password');
+      if ($this->form_validation->run() === FALSE) {
+        $page  = 'reset-password';
+        $data  = $where;
+        templateAuth($page, $data);
+      } else {
+        $this->_reset_password($email);
+      }
+    } else {
+      $this->session->set_flashdata('error', 'Data yang di minta tidak ada');
+      redirect('auth/login');
+    }
+  }
+
+  private function _reset_password($email)
+  {
+    $newPassword  = $this->input->post('new-password');
+    $dataUpdate   = [
+      'password'    => password_hash($newPassword, PASSWORD_DEFAULT),
+      'updated_at'  => date('Y-m-d H:i:s')
+    ];
+    $where        = [
+      'email'     => $email
+    ];
+
+    $update       = $this->User->update($dataUpdate, $where);
+    if ($update > 0) {
+      $this->User->deleteToken(['email' => $email]);
+      $this->session->set_flashdata('success', 'Reset Password Berhasil, silahkan login');
+    } else {
+      $this->session->set_flashdata('error', 'Reset Password gagal, silahkan coba lagi');
+    }
+    redirect('auth/login');
+  }
+
   public function activation($email)
   {
+    //AKTIVASI Sederhana nanti bisa di tambahkan menggunakan token dan sebagainya
     $rowData  = $this->User->getDataBy(['email' => $email]);
     if ($rowData->num_rows() > 0) {
       $dataUpdate = [
@@ -137,6 +219,30 @@ class Auth extends CI_Controller
         ]
       );
     }
+    if ($type === 'reset-password') {
+      $this->form_validation->set_rules(
+        'new-password',
+        'Password Baru',
+        'trim|required|min_length[6]|max_length[12]',
+        [
+          'required'    => '%s Wajib diisi',
+          'min_length'  => '%s Minimal 6 Karakter',
+          'max_length'  => '%s Maksimal 10 Karakter',
+        ]
+      );
+
+      $this->form_validation->set_rules(
+        'confirm-password',
+        'Konfirmasi Password Baru',
+        'trim|required|min_length[6]|max_length[12]|matches[new-password]',
+        [
+          'required'    => '%s Wajib diisi',
+          'min_length'  => '%s Minimal 6 Karakter',
+          'max_length'  => '%s Maksimal 10 Karakter',
+          'matches'     => '%s tidak cocok'
+        ]
+      );
+    }
   }
 
   private function  _sendEmailPHPMailer($data, $type)
@@ -154,6 +260,17 @@ class Auth extends CI_Controller
       //Body bisa di load ke view 
       $body           = 'Silahkan Klik Link ini untuk mengaktifkan <a href="' . base_url('aktivasi/' . $data['email'] . '">' . base_url('aktivasi/' . $data['email']) . '</a>');
     }
+
+    if ($type === 'forgot-password') {
+      $mail->setFrom('templatecrud@gmail.com', 'Template CRUD Email Pengirim');
+      $mail->addAddress('' . $data['email'] . '', '');
+      $mail->addReplyTo('hardiyantoagung55@gmail.com', 'No Reply');
+      $mail->addBCC('agunghardiyanto12@gmail.com');
+      $mail->isHTML(true);
+      $mail->Subject  = 'Reset Password Akun';
+      $body           = 'Silahkan Klik Link ini untuk reset password <a href="' . base_url('reset-password/' . $data['email'] . '/' . $data['token'] . '">' . base_url('reset-password/' . $data['email']) . '/' . $data['token'] . '</a>');
+    }
+
     $mail->Body   = $body;
     if (!$mail->send()) {
       echo "Email Error: " . $mail->ErrorInfo;

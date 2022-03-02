@@ -6,6 +6,7 @@ class User_model extends CI_Model
   {
     parent::__construct();
     $this->table  = 'm_user';
+    $this->tableToken = 't_token';
   }
 
   public function getDataBy($data)
@@ -22,6 +23,23 @@ class User_model extends CI_Model
   public function update($data, $where)
   {
     $this->db->update($this->table, $data, $where);
+    return $this->db->affected_rows();
+  }
+
+  public function insert_token($data)
+  {
+    $this->db->insert($this->tableToken, $data);
+    return $this->db->affected_rows();
+  }
+
+  public function getDataTokenBy($data)
+  {
+    return $this->db->get_where($this->tableToken, $data);
+  }
+
+  public function deleteToken($where)
+  {
+    $this->db->delete($this->tableToken, $where);
     return $this->db->affected_rows();
   }
 }
