@@ -23,9 +23,9 @@
       <button type="submit" class="btn btn-primary btn-block">Daftar Sekarang</button>
     </div>
     <div class="clearfix">
-      <label class="float-left form-check-label"><input type="checkbox"> Remember me</label>
-      <a href="#" class="float-right">Lupa password?</a>
+      <!-- <label class="float-left form-check-label"><input type="checkbox"> Remember me</label> -->
+      <a href="<?= base_url('lupa-password') ?>" class="float-right">Lupa password?</a>
     </div>
   </form>
-  <p class="text-center"><a href="#">Login</a></p>
+  <p class="text-center"><a href="<?= base_url('auth/login') ?>">Login</a></p>
 </div>

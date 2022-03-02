@@ -8,6 +8,7 @@ class Auth extends CI_Controller
     parent::__construct();
     $this->load->model('User_model', 'User');
   }
+
   public function login()
   {
     $page  = 'login';
@@ -17,7 +18,7 @@ class Auth extends CI_Controller
 
   public function sign_up()
   {
-    $this->_validation();
+    $this->_validation('sign-up');
     if ($this->form_validation->run() === FALSE) {
       $page  = 'sign-up';
       $data  = [];
@@ -58,12 +59,14 @@ class Auth extends CI_Controller
 
   public function forgot_password()
   {
-    $page  = 'forgot-password';
-    $data  = [];
-    templateAuth($page, $data);
+    $this->_validation('forgot-password');
+    if ($this->form_validation->run() === FALSE) {
+      $page  = 'forgot-password';
+      $data  = [];
+      templateAuth($page, $data);
+    } else {
+    }
   }
-
-
 
   //AKTIVASI Sederhana nanti bisa di tambahkan menggunakan token dan sebagainya
   public function activation($email)
@@ -89,40 +92,52 @@ class Auth extends CI_Controller
     }
   }
 
-  private function _validation()
+  private function _validation($type = null)
   {
-    $this->form_validation->set_rules(
-      'email',
-      'Email',
-      'trim|required|valid_email|is_unique[m_user.email]',
-      [
-        'required'    => '%s Wajib diisi',
-        'valid_email' => 'Format %s Salah',
-        'is_unique'   => '%s sudah terdaftar',
-      ]
-    );
+    if ($type === 'sign-up') {
+      $this->form_validation->set_rules(
+        'email',
+        'Email',
+        'trim|required|valid_email|is_unique[m_user.email]',
+        [
+          'required'    => '%s Wajib diisi',
+          'valid_email' => 'Format %s Salah',
+          'is_unique'   => '%s sudah terdaftar',
+        ]
+      );
 
-    $this->form_validation->set_rules(
-      'password',
-      'Password',
-      'trim|required|min_length[6]|max_length[12]',
-      [
-        'required'    => '%s Wajib diisi',
-        'min_length'  => '%s Minimal 6 Karakter',
-        'max_length'  => '%s Maksimal 10 Karakter',
-      ]
-    );
+      $this->form_validation->set_rules(
+        'password',
+        'Password',
+        'trim|required|min_length[6]|max_length[12]',
+        [
+          'required'    => '%s Wajib diisi',
+          'min_length'  => '%s Minimal 6 Karakter',
+          'max_length'  => '%s Maksimal 10 Karakter',
+        ]
+      );
 
-    $this->form_validation->set_rules(
-      'full-name',
-      'Nama Lengkap',
-      'trim|required',
-      [
-        'required'    => '%s Wajib diisi',
-      ]
-    );
+      $this->form_validation->set_rules(
+        'full-name',
+        'Nama Lengkap',
+        'trim|required',
+        [
+          'required'    => '%s Wajib diisi',
+        ]
+      );
+    }
+    if ($type === 'forgot-password') {
+      $this->form_validation->set_rules(
+        'email',
+        'Email',
+        'trim|required|valid_email',
+        [
+          'required'    => '%s Wajib diisi',
+          'valid_email' => 'Format %s Salah',
+        ]
+      );
+    }
   }
-
 
   private function  _sendEmailPHPMailer($data, $type)
   {

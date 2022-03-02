@@ -53,6 +53,8 @@ $route['default_controller']        = 'auth/login';
 
 $route['daftar-akun']               = 'auth/sign_up';
 
+$route['lupa-password']             = 'auth/forgot_password';
+
 $route['aktivasi/(:any)']           = 'auth/activation/$1';
 
 $route['404_override']              = '';
