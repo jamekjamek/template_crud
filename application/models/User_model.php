@@ -9,6 +9,40 @@ class User_model extends CI_Model
     $this->tableToken = 't_token';
   }
 
+  public function getDataUser()
+  {
+    $this->_join();
+    if ((int)$this->input->post('length') !== -1) {
+      $this->db->limit($this->input->post('length'), $this->input->post('start'));
+    }
+    return $this->db->get($this->table);
+  }
+
+  public function countRecordsTotal()
+  {
+    $this->db->select('*');
+    $this->db->from($this->table);
+    return $this->db->count_all_results();
+  }
+
+  private function _join()
+  {
+    if (@$this->input->post('search')['value']) {
+      $this->db->like('full_name', $this->input->post('search')['value']);
+    }
+    if ($this->input->post('order')) {
+      $this->db->order_by('email', $this->input->post('order')['0']['dir']);
+    } else {
+      $this->db->order_by('id', 'DESC');
+    }
+  }
+
+  public function countRecordsFiltered()
+  {
+    $this->_join();
+    return $this->db->get($this->table);
+  }
+
   public function getDataBy($data)
   {
     return $this->db->get_where($this->table, $data);

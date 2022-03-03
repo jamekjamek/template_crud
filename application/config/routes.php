@@ -60,6 +60,7 @@ $route['reset-password/(:any)/(:any)']    = 'auth/reset_password/$1/$2';
 
 //TEMPLATE CURD
 $route['home']                      = 'crud/index';
+$route['crud-data']                 = 'crud/datatable';
 
 $route['404_override']              = '';
 $route['translate_uri_dashes']      = FALSE;

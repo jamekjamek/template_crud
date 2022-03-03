@@ -34,7 +34,7 @@ class Auth extends CI_Controller
       if (password_verify($password, $userData->password)) {
         if ($userData->is_active === '1') {
           $session  = ['userdata' => [
-            'id'          => $this->encrypt->encode($userData->id, keyencrypt()),
+            'id'          => encodeEncrypt($userData->id),
             'email'       => $userData->email,
             'full_name'   => $userData->full_name,
             'level'       => $userData->level,
@@ -119,7 +119,7 @@ class Auth extends CI_Controller
         $randomString = random_string('alpha', 20);
         $dataToken  = [
           'email'   => htmlspecialchars($email),
-          'token'   => $this->encrypt->encode($randomString, keyencrypt()),
+          'token'   => encodeEncrypt($randomString),
         ];
         $insert       = $this->User->insert_token($dataToken);
         if ($insert > 0) {

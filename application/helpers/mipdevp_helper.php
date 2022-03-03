@@ -1,9 +1,8 @@
 <?php
-//LOGIN TEMPLATE
 
 use PHPMailer\PHPMailer\PHPMailer;
 
-function templateAuth($page = '', $data = [])
+function templateAuth($page = null, $data = null)
 {
   $mip = get_instance();
   $mip->load->view('authentication/template/header', $data);
@@ -11,6 +10,13 @@ function templateAuth($page = '', $data = [])
   $mip->load->view('authentication/template/footer');
 }
 
+function crudPage($page = null, $data = null)
+{
+  $mip = get_instance();
+  $mip->load->view('admin/template/header', $data);
+  $mip->load->view('admin/crud/' . $page, $data);
+  $mip->load->view('admin/template/footer');
+}
 
 function PHPMailer()
 {
@@ -40,4 +46,16 @@ function unsetFlash()
 function keyencrypt()
 {
   return 'xWeQSDEraxvftnabsyeirytcnsaVBFSH856SNEbsgatw791';
+}
+
+function encodeEncrypt($id)
+{
+  $mip = get_instance();
+  return $mip->encrypt->encode($id, keyencrypt());
+}
+
+function decodeEncrypt($id)
+{
+  $mip = get_instance();
+  return $mip->encrypt->decode($id, keyencrypt());
 }
