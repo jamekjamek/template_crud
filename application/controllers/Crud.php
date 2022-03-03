@@ -33,23 +33,71 @@ class Crud extends CI_Controller
 
   private function _create()
   {
+    $dataInsert = $this->_data();
+
+    $insert     = $this->User->insert($dataInsert);
+    if ($insert > 0) {
+      $this->session->set_flashdata('success', 'Data Berhasil di tambah');
+      redirect($this->redirect);
+    } else {
+      $this->session->set_flashdata('error', 'Data Gagal di Tambahkan');
+      redirect($this->redirect);
+    }
+  }
+
+  private function _data($type = null)
+  {
     $email      = htmlspecialchars($this->input->post('email'));
     $password   = $this->input->post('password');
     $fullName   = htmlspecialchars($this->input->post('full-name'));
     $level      = $this->input->post('level');
     $isActive   = $this->input->post('status');
 
-    $dataInsert = [
+    $postData       = [
       'email'     => $email,
-      'password'  => $password,
+      'password'  => password_hash($password, PASSWORD_DEFAULT),
       'full_name' => $fullName,
       'level'     => $level,
       'is_active' => $isActive,
       'is_delete' => '0'
     ];
-    $insert     = $this->User->insert($dataInsert);
-    if ($insert > 0) {
-      $this->session->set_flashdata('success', 'Data Berhasil di tambah');
+    if ($type === 'update') {
+      $postData     += [
+        'updated_at'  => date('Y-m-d H:i:s')
+      ];
+    }
+    return $postData;
+  }
+
+  public function update($id)
+  {
+    $id   = (int)decodeEncrypt($id);
+    $user = $this->User->getDataBy(['id' => $id]);
+    if ($user->num_rows() > 0) {
+      $oldEmail = $user->row()->email;
+      $this->_validation($oldEmail);
+      if ($this->form_validation->run() === FALSE) {
+        $page = 'update';
+        $data = [
+          'user'  => $user->row()
+        ];
+        crudPage($page, $data);
+      } else {
+        $this->_update($id);
+      }
+    } else {
+      $this->session->set_flashdata('error', 'Data yand dipilih tidak ada');
+      redirect($this->redirect);
+    }
+  }
+
+  private function _update($id)
+  {
+    $dataUpdate = $this->_data('update');
+    $where      = ['id' => $id];
+    $update     = $this->User->update($dataUpdate, $where);
+    if ($update > 0) {
+      $this->session->set_flashdata('success', 'Data Berhasil di update');
       redirect($this->redirect);
     } else {
       $this->session->set_flashdata('error', 'Data Gagal di Tambahkan');
@@ -81,7 +129,7 @@ class Crud extends CI_Controller
 
       $row[] = '
         <div class="btn-group">
-          <a href="' . base_url('admin/master/student/edit/' . encodeEncrypt($user->id)) . '" class="btn btn-success"><i class="ik ik-edit"></i>Edit</a>
+          <a href="' . base_url('home/ubah/' . encodeEncrypt($user->id)) . '" class="btn btn-success"><i class="ik ik-edit"></i>Edit</a>
           <button type="button" class="btn btn-danger delete-student" data-id="' . encodeEncrypt($user->id) . '"><i class=" ik ik-trash"></i>Hapus</button>
         </div>
       ';
@@ -98,12 +146,17 @@ class Crud extends CI_Controller
       ->set_output(json_encode($output));
   }
 
-  private function _validation()
+  private function _validation($email = null)
   {
+    if ($this->input->post('email') !== $email) {
+      $isUnique = '|is_unique[m_user.email]';
+    } else {
+      $isUnique = '';
+    }
     $this->form_validation->set_rules(
       'email',
       'Email',
-      'trim|required|valid_email|is_unique[m_user.email]',
+      'trim|required|valid_email' . $isUnique,
       [
         'required'    => '%s Wajib diisi',
         'valid_email' => 'Format %s Salah',
