@@ -130,7 +130,7 @@ class Crud extends CI_Controller
       $row[] = '
         <div class="btn-group">
           <a href="' . base_url('home/ubah/' . encodeEncrypt($user->id)) . '" class="btn btn-success"><i class="ik ik-edit"></i>Edit</a>
-          <button type="button" class="btn btn-danger delete-student" data-id="' . encodeEncrypt($user->id) . '"><i class=" ik ik-trash"></i>Hapus</button>
+          <button type="button" class="btn btn-danger delete-data" data-id="' . encodeEncrypt($user->id) . '"><i class=" ik ik-trash"></i>Hapus</button>
         </div>
       ';
       $data[] = $row;
@@ -146,6 +146,31 @@ class Crud extends CI_Controller
       ->set_output(json_encode($output));
   }
 
+  public function delete($id)
+  {
+    $id   = (int)decodeEncrypt($id);
+    $user = $this->User->getDataBy(['id' => $id]);
+    if ($user->num_rows() > 0) {
+      $dataDelete = [
+        'is_delete'   => '1',
+        'deleted_at'  => date('Y-m-d H:i:s')
+      ];
+      $where    = [
+        'id'  => $id
+      ];
+      $delete   = $this->User->update($dataDelete, $where);
+      if ($delete > 0) {
+        $this->session->set_flashdata('success', 'Data Berhasil di hapus');
+        redirect($this->redirect);
+      } else {
+        $this->session->set_flashdata('error', 'Data Gagal di hapus');
+        redirect($this->redirect);
+      }
+    } else {
+      $this->session->set_flashdata('error', 'Data yand dipilih tidak ada');
+      redirect($this->redirect);
+    }
+  }
   private function _validation($email = null)
   {
     if ($this->input->post('email') !== $email) {

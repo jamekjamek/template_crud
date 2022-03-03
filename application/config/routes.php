@@ -64,6 +64,7 @@ $route['home']                      = 'crud/index';
 $route['crud-data']                 = 'crud/datatable';
 $route['home/tambah']               = 'crud/create';
 $route['home/ubah/(:any)']          = 'crud/update/$1';
+$route['home/hapus/(:any)']         = 'crud/delete/$1';
 
 $route['404_override']              = '';
 $route['translate_uri_dashes']      = FALSE;
