@@ -11,6 +11,9 @@ class Auth extends CI_Controller
 
   public function login()
   {
+    if ($this->session->userdata('userdata')) {
+      redirect('home');
+    }
     $this->_validation('login');
     if ($this->form_validation->run() === FALSE) {
       $page  = 'login';
@@ -212,6 +215,13 @@ class Auth extends CI_Controller
     } else {
       echo "Data tidak ada";
     }
+  }
+
+  public function log_out()
+  {
+    $this->session->sess_destroy();
+    $this->session->set_flashdata('success', 'Anda Telah Logout');
+    redirect('auth/login');
   }
 
   private function _validation($type = null)

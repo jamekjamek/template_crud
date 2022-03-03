@@ -33,7 +33,7 @@ class User_model extends CI_Model
     if ($this->input->post('order')) {
       $this->db->order_by('email', $this->input->post('order')['0']['dir']);
     } else {
-      $this->db->order_by('id', 'DESC');
+      $this->db->order_by('id', $this->input->post('order')['0']['dir']);
     }
   }
 

@@ -55,12 +55,14 @@ $route['daftar-akun']                     = 'auth/sign_up';
 $route['lupa-password']                   = 'auth/forgot_password';
 $route['aktivasi/(:any)']                 = 'auth/activation/$1';
 $route['reset-password/(:any)/(:any)']    = 'auth/reset_password/$1/$2';
+$route['keluar']                          = 'auth/log_out';
 //END AUTHENTICATION
 
 
 //TEMPLATE CURD
 $route['home']                      = 'crud/index';
 $route['crud-data']                 = 'crud/datatable';
+$route['home/tambah']               = 'crud/create';
 
 $route['404_override']              = '';
 $route['translate_uri_dashes']      = FALSE;

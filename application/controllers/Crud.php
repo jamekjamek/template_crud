@@ -6,33 +6,55 @@ class Crud extends CI_Controller
   {
     parent::__construct();
     $this->load->model('User_model', 'User');
+    if (!$this->session->userdata('userdata')) {
+      $this->session->set_flashdata('error', 'Anda Harus Login dahalu');
+      redirect('auth/login');
+    }
+    $this->redirect = 'home';
   }
 
   public function index()
   {
-    // for ($i = 0; $i < 100; $i++) {
-    //   $dataInsert = [
-    //     'email'     => htmlspecialchars(random_string('alpha', 20)),
-    //     'password'  => password_hash(random_string('alnum', 10), PASSWORD_DEFAULT),
-    //     'full_name' => htmlspecialchars(random_string('alpha', 25)),
-    //     'level'     => 'Admin',
-    //     'is_active' => '1',
-    //     'is_delete' => '0',
-    //   ];
-    //   $this->User->insert($dataInsert);
-    // }
-
     $page = 'index';
-    $data = [
-      'users' => $this->User->getDataUser()->result()
-    ];
+    $data = [];
     crudPage($page, $data);
   }
 
   public function create()
   {
-    $page = 'create';
-    crudPage($page);
+    $this->_validation();
+    if ($this->form_validation->run() === false) {
+      $page = 'create';
+      crudPage($page);
+    } else {
+      $this->_create();
+    }
+  }
+
+  private function _create()
+  {
+    $email      = htmlspecialchars($this->input->post('email'));
+    $password   = $this->input->post('password');
+    $fullName   = htmlspecialchars($this->input->post('full-name'));
+    $level      = $this->input->post('level');
+    $isActive   = $this->input->post('status');
+
+    $dataInsert = [
+      'email'     => $email,
+      'password'  => $password,
+      'full_name' => $fullName,
+      'level'     => $level,
+      'is_active' => $isActive,
+      'is_delete' => '0'
+    ];
+    $insert     = $this->User->insert($dataInsert);
+    if ($insert > 0) {
+      $this->session->set_flashdata('success', 'Data Berhasil di tambah');
+      redirect($this->redirect);
+    } else {
+      $this->session->set_flashdata('error', 'Data Gagal di Tambahkan');
+      redirect($this->redirect);
+    }
   }
 
   public function datatable()
@@ -74,5 +96,50 @@ class Crud extends CI_Controller
     $this->output
       ->set_content_type('application/json')
       ->set_output(json_encode($output));
+  }
+
+  private function _validation()
+  {
+    $this->form_validation->set_rules(
+      'email',
+      'Email',
+      'trim|required|valid_email|is_unique[m_user.email]',
+      [
+        'required'    => '%s Wajib diisi',
+        'valid_email' => 'Format %s Salah',
+        'is_unique'   => '%s sudah terdaftar',
+      ]
+    );
+
+    $this->form_validation->set_rules(
+      'password',
+      'Password',
+      'trim|required|min_length[6]|max_length[12]',
+      [
+        'required'    => '%s Wajib diisi',
+        'min_length'  => '%s Minimal 6 Karakter',
+        'max_length'  => '%s Maksimal 10 Karakter',
+      ]
+    );
+
+    $this->form_validation->set_rules(
+      'full-name',
+      'Nama Lengkap',
+      'trim|required',
+      [
+        'required'    => '%s Wajib diisi',
+      ]
+    );
+
+    if ($this->input->post('level') === "") {
+      $this->form_validation->set_rules(
+        'level',
+        'Level',
+        'trim|required',
+        [
+          'required'  => '%s Wajib diisi'
+        ]
+      );
+    }
   }
 }
